@@ -5,7 +5,32 @@
     <title>Load Test</title>
     <script src="angular.min.js"></script>
     <script src="loadTestController.js"></script>
+    <style>
+        label {display:block;margin-top: 10px;}
+        textarea {
+            width: 70%; display: block; min-height: 200px;
+        }
+        body {
+            font-family: helvetica, sans-serif;
+        }
+    </style>
 </head>
 <body ng-controller="LoadTestController">
+<div ng-show="!configHidden">
+    <h1>Load Test Config</h1>
+    <label>URLs to GET <small>(One per line)</small></label>
+    <textarea ng-model="urlsToPing">
+
+    </textarea>
+    <label>GET frequency</label>
+    <input ng-model="getFrequency" type="number" min="1" /> seconds
+    <label>Number of threads per URL</label>
+    <input ng-model="numThreads" type="number" min="1" /> threads
+
+    <br /><br />
+    <button ng-click="configHidden = true; startLoadTest();">Start Test</button>
+    <hr />
+</div>
+<button ng-show="configHidden" ng-click="configHidden = false">Config</button>
 </body>
 </html>
