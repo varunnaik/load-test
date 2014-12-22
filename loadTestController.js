@@ -4,36 +4,33 @@ angular.module('loadTest', [])
         // For each group of provided URLs, spin off n test threads with the given timeout
         var runningTests = [];
         var testURLs = [];
+        $scope.failedRequests = [];
 
         /* Test configuration */
         $scope.getFrequency = 1;
         $scope.numThreads = 2;
         $scope.timeout = 5000;
-        $scope.urlsToPing = "/\n" +
-        "/#/shop\n" +
-        "/#/games\n" +
-        "/#/crew\n" +
-        "/#/viewer";
+        $scope.urlsToPing = "/\n";
 
         /* Some test statistics */
         $scope.requestsMade = 0;
         $scope.requestsSuccess = 0;
         $scope.requestsFailure = 0;
         $scope.requestsIncomplete = 0;
-        $scope.transferredBytes = 0;
-        $scope.transferredBytes = 0;
         $scope.totalResponseTime = 0;
+        $scope.transferredMB = 0;
+        var transferredBytes = 0;
 
         $scope.startTest = function () {
             $scope.stopTest();
-
+            $scope.failedRequests = [];
             $scope.requestsMade = 0;
             $scope.requestsSuccess = 0;
             $scope.requestsFailure = 0;
             $scope.requestsIncomplete = 0;
-            $scope.transferredBytes = 0;
-            $scope.transferredBytes = 0;
             $scope.totalResponseTime = 0;
+            $scope.transferredMB = 0;
+            transferredBytes = 0;
 
             var urls = $scope.urlsToPing.split('\n');
             for (var i = 0; i < urls.length; i++) {
@@ -68,10 +65,19 @@ angular.module('loadTest', [])
                 cache: false
             }).then(function success(data) {
                 $scope.requestsSuccess += 1;
-                $scope.transferredBytes += parseInt(data.headers('Content-Length'));
+                if (data.headers('Content-Length')) {
+                    transferredBytes += parseInt(data.headers('Content-Length'));
+                    $scope.transferredMB = (transferredBytes/1024/1024).toFixed(2);
+                }
                 $scope.totalResponseTime += new Date() - startDate;
             }, function error(error, status) {
                 $scope.requestsFailure += 1;
+                $scope.failedRequests.push({
+                    url: error.config.url,
+                    code: error.status,
+                    details: error.statusText
+                });
+                console.log("Error", error.config.url, error);
             }).finally(function() {
                 runningTests[testIndex].timeout = $timeout(
                     function() {

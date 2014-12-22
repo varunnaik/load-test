@@ -32,11 +32,15 @@
             margin-top: 20px;
             font-size: 1.5em;
         }
-        span.good {
+        .good {
             color: darkgreen;
         }
-        span.bad {
+        .bad {
             color: darkred;
+        }
+        .failed-details {
+            display: inline-block;
+            margin-bottom: 0;
         }
     </style>
 </head>
@@ -51,7 +55,7 @@
     <input ng-model="getFrequency" type="number" min="1" /> seconds
     <label>Number of threads per URL</label>
     <input ng-model="numThreads" type="number" min="1" /> threads
-    <label>Timneout (ms)</label>
+    <label>Timeout (ms)</label>
     <input ng-model="timeout" type="number" min="5000" /> ms
 
     <br /><br />
@@ -66,7 +70,16 @@
     <div><i>Total Requests</i><b>{{requestsMade}}</b></div>
     <div><i>Avg. response time</i><b>{{(totalResponseTime/requestsMade).toFixed(3)}} ms</b></div>
     <div><i>Total requests (successful/failed)</i><b>{{requestsMade}} (<span class="good">{{requestsSuccess}}</span>/<span class="bad">{{requestsFailure}}</span>)</b></div>
-    <div><i>Total MB transferred</i><b>{{transferredBytes/1024/1024).toFixed(2)}}</b></div>
+    <div><i>Total MB transferred</i><b>{{transferredMB}}</b></div>
+</div>
+<h3 class="bad">Failed Requests</h3>
+<div ng-repeat="request in failedRequests">
+    <small>URL:</small>
+    <h4 class="bad failed-details">{{request.url}}</h4><br/>
+    <small>REASON:</small>
+    <h4 class="bad failed-details">{{request.code}}</h4>
+    {{request.details}}
+    <hr />
 </div>
 </body>
 </html>
