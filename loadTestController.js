@@ -64,9 +64,12 @@ angular.module('loadTest', [])
                 method: 'GET',
                 url: runningTests[testIndex].url,
                 timeout: $scope.timeout,
+                params: {date: new Date()},
                 cache: false
-            }).then(function success(data,status) {
+            }).then(function success(data) {
                 $scope.requestsSuccess += 1;
+                $scope.transferredBytes += parseInt(data.headers('Content-Length'));
+                console.log($scope.transferredBytes)
             }, function error(error, status) {
                 $scope.requestsFailure += 1;
             }).finally(function() {
