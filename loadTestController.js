@@ -60,16 +60,16 @@ angular.module('loadTest', [])
             // Spawn tests
             if (typeof (runningTests[testIndex]) === 'undefined') return;
             $scope.requestsMade += 1;
+            var startDate = new Date();
             $http({
                 method: 'GET',
                 url: runningTests[testIndex].url,
                 timeout: $scope.timeout,
-                params: {date: new Date()},
                 cache: false
             }).then(function success(data) {
                 $scope.requestsSuccess += 1;
                 $scope.transferredBytes += parseInt(data.headers('Content-Length'));
-                console.log($scope.transferredBytes)
+                $scope.totalResponseTime += new Date() - startDate;
             }, function error(error, status) {
                 $scope.requestsFailure += 1;
             }).finally(function() {
