@@ -11,13 +11,38 @@
             width: 70%; display: block; min-height: 200px;
         }
         body {
-            font-family: helvetica, sans-serif;
+            font-family: helvetica, "Droid Sans", sans-serif;
+        }
+        #test-results div {
+            width: 45%;
+            display: inline-block;
+            text-align: center;
+            padding: 10px 0 10px 0;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+        #test-results i {
+            text-transform: uppercase;
+            font-size: 0.8125em;
+            font-style: normal;
+            display: block;
+            margin-bottom: 10px;
+        }
+        #test-results b {
+            margin-top: 20px;
+            font-size: 1.5em;
+        }
+        span.good {
+            color: darkgreen;
+        }
+        span.bad {
+            color: darkred;
         }
     </style>
 </head>
 <body ng-controller="LoadTestController">
 <div ng-show="!configHidden">
-    <h1>Load Test Config</h1>
+    <h2>Load Test Config</h2>
     <label>URLs to GET <small>(One per line)</small></label>
     <textarea ng-model="urlsToPing">
 
@@ -26,11 +51,22 @@
     <input ng-model="getFrequency" type="number" min="1" /> seconds
     <label>Number of threads per URL</label>
     <input ng-model="numThreads" type="number" min="1" /> threads
+    <label>Timneout (ms)</label>
+    <input ng-model="timeout" type="number" min="5000" /> threads
 
     <br /><br />
-    <button ng-click="configHidden = true; startLoadTest();">Start Test</button>
+    <button ng-click="configHidden = true; testStarted = true; startTest();" ng-show="!testStarted">Start Test</button>
+    <button ng-click="configHidden = true;" ng-show="testStarted">Hide Config</button>
     <hr />
 </div>
-<button ng-show="configHidden" ng-click="configHidden = false">Config</button>
+<button ng-show="configHidden" ng-click="configHidden = false">Open Config</button>
+<button ng-show="testStarted" ng-click="stopTest(); testStarted = false;">Stop Test</button>
+<div id="test-results">
+    <h2>Load Test Results</h2>
+    <div><i>Total Requests</i><b>{{requestsMade}}</b></div>
+    <div><i>Avg. response time</i><b>{{(totalResponseTime/requestsMade).toFixed(3)}} ms</b></div>
+    <div><i>Total requests (successful/failed)</i><b>{{requestsMade}} (<span class="good">{{requestsSuccess}}</span>/<span class="bad">{{requestsFailure}}</span>)</b></div>
+    <div><i>Total MB transferred</i><b>{{(transferredBytes/1024/1024).toFixed(2)}}</b></div>
+</div>
 </body>
 </html>
