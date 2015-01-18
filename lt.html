@@ -32,6 +32,11 @@
             margin-top: 20px;
             font-size: 1.5em;
         }
+        #config-area {
+			background: #f6f6f6;
+			border: #ccc solid 1px;
+			padding: 10px;
+		}
         .good {
             color: darkgreen;
         }
@@ -42,38 +47,45 @@
             display: inline-block;
             margin-bottom: 0;
         }
+        .message {
+			width: 88%;
+			padding: 10px;
+			border: 1px solid #ccc;
+			margin: 5px;
+		}
     </style>
 </head>
 <body ng-controller="LoadTestController">
-<div ng-show="!configHidden">
+<div id="config-area" ng-show="!configHidden" ng-init="">
     <h2>Load Test Config</h2>
-    <label>URLs to GET <small>(One per line)</small></label>
-    <textarea ng-model="urlsToPing">
+    <label for="urls-to-ping">URLs to GET <small>(One per line)</small></label>
+    <textarea id="urls-to-ping" ng-model="urlsToPing">
 
     </textarea>
-    <label>GET frequency</label>
-    <input ng-model="getFrequency" type="number" min="1" /> seconds
-    <label>Number of threads per URL</label>
-    <input ng-model="numThreads" type="number" min="1" /> threads
-    <label>Timeout (ms)</label>
-    <input ng-model="timeout" type="number" min="5000" /> ms
+    <label for="get-frequency">GET frequency</label>
+    <input id="get-frequency" title="How often to request each configured URL" ng-model="getFrequency" type="number" min="1" /> seconds
+    <label for="num-threads" title="How many requests to make when requesting a URL">Number of requests per URL</label>
+    <input id="num-threads" ng-model="numThreads" type="number" min="1" /> requests
+    <label for="timeout">Timeout (ms)</label>
+    <input id="timeout" ng-model="timeout" type="number" min="5000" /> ms<br /><br />
+    <input id="random-string" type="checkbox" ng-model="randomString"/><label for="random-string" style="display:inline">Append a random string to each URL (eg. ?123) to prevent caching</label>
 
     <br /><br />
     <button ng-click="configHidden = true; testStarted = true; startTest();" ng-show="!testStarted">Start Test</button>
-    <button ng-click="configHidden = true;" ng-show="testStarted">Hide Config</button>
-    <hr />
+    <button ng-click="configHidden = true;">Hide Config</button>
 </div>
 <button ng-show="configHidden" ng-click="configHidden = false">Open Config</button>
-<button ng-show="testStarted" ng-click="stopTest(); testStarted = false;">Stop Test</button>
+<button ng-show="testStarted" ng-click="stopTest();testStarted=false;">Stop Test</button>
+<div class="message" ng-show="message">{{message}}</div>
 <div id="test-results">
     <h2>Load Test Results</h2>
-    <div><i>Total Requests</i><b>{{requestsMade}}</b></div>
+    <div><i>Requests/second</i><b>{{requestsMade/timeElapsed}}</b></div>
     <div><i>Avg. response time</i><b>{{(totalResponseTime/requestsMade).toFixed(3)}} ms</b></div>
     <div><i>Total requests (successful/failed)</i><b>{{requestsMade}} (<span class="good">{{requestsSuccess}}</span>/<span class="bad">{{requestsFailure}}</span>)</b></div>
     <div><i>Total MB transferred</i><b>{{transferredMB}}</b></div>
 </div>
-<h3 class="bad">Failed Requests</h3>
-<div ng-repeat="request in failedRequests">
+<h3 class="bad" ng-show="testStarted">Failed Requests</h3>
+<div ng-repeat="request in failedRequests.slice().reverse() | limitTo:100">
     <small>URL:</small>
     <h4 class="bad failed-details">{{request.url}}</h4><br/>
     <small>REASON:</small>

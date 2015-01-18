@@ -4,13 +4,18 @@ angular.module('loadTest', [])
         // For each group of provided URLs, spin off n test threads with the given timeout
         var runningTests = [];
         var testURLs = [];
+        var timeStarted = null;
+        var runningTestTimeout = null;
         $scope.failedRequests = [];
+        $scope.message = "";
 
         /* Test configuration */
         $scope.getFrequency = 1;
         $scope.numThreads = 2;
         $scope.timeout = 5000;
-        $scope.urlsToPing = "/\n";
+        $scope.timeElapsed = 1;
+        $scope.randomString = false;
+        $scope.urlsToPing = "/asd\n/lolol\m/asdasdasdasdasd";
 
         /* Some test statistics */
         $scope.requestsMade = 0;
@@ -31,9 +36,13 @@ angular.module('loadTest', [])
             $scope.totalResponseTime = 0;
             $scope.transferredMB = 0;
             transferredBytes = 0;
+            timeStarted = new Date();		
 
             var urls = $scope.urlsToPing.split('\n');
+            var addedUrls = false;
             for (var i = 0; i < urls.length; i++) {
+				if (!urls[i]) continue;
+				addedUrls = true;
                 for (var j = 0; j < $scope.numThreads; j++) {
                     var urlConfig = {};
                     urlConfig.url = urls[i];
@@ -42,6 +51,16 @@ angular.module('loadTest', [])
                     urlConfig.timeout = spawnTest(index);
                 }
             }
+            if (!addedUrls) {
+				$scope.message = "No URLs found";
+				$scope.stopTest();
+                $scope.testStarted = false;
+                $scope.configHidden = false;
+			}
+            
+            runningTestTimeout = setTimeout(function() {
+				$scope.elapsedTime = timeStarted - new Date() / 1000;
+			});
 
         };
 
@@ -51,6 +70,8 @@ angular.module('loadTest', [])
                 var test = runningTests.pop();
                 clearTimeout(test.timeout);
             }
+            clearTimeout(runningTestTimeout);
+            runningTestTimeout = null;
         };
 
         var spawnTest = function (testIndex) {
@@ -60,7 +81,7 @@ angular.module('loadTest', [])
             var startDate = new Date();
             $http({
                 method: 'GET',
-                url: runningTests[testIndex].url,
+                url: runningTests[testIndex].url+($scope.randomString)? '?'+Math.random().toString(36):'',
                 timeout: $scope.timeout,
                 cache: false
             }).then(function success(data) {
@@ -73,11 +94,11 @@ angular.module('loadTest', [])
             }, function error(error, status) {
                 $scope.requestsFailure += 1;
                 $scope.failedRequests.push({
-                    url: error.config.url,
+                    url: runningTests[testIndex].url,
                     code: error.status,
                     details: error.statusText
                 });
-                console.log("Error", error.config.url, error);
+                console.log("Error", runningTests[testIndex].url, error);
             }).finally(function() {
                 runningTests[testIndex].timeout = $timeout(
                     function() {
