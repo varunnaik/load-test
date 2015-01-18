@@ -1,5 +1,5 @@
 angular.module('loadTest', [])
-    .controller('LoadTestController', ['$scope', '$http', '$timeout', function ($scope, $http, $timeout) {
+    .controller('LoadTestController', ['$scope', '$http', '$timeout', '$location', function ($scope, $http, $timeout, $location) {
         // For each provided URL, spin off a test thread with a timeout
         // For each group of provided URLs, spin off n test threads with the given timeout
         var runningTests = [];
@@ -17,7 +17,12 @@ angular.module('loadTest', [])
         $scope.timeout = 5000;
         $scope.timeElapsed = 1;
         $scope.randomString = false;
-        $scope.urlsToPing = "";
+
+
+        /* ENTER THE URLS YOU WANT TO GET HERE, One Per Line. */
+        $scope.urlsToPing = ""; // Use \n as a separator between URLs
+        /* End URLS */
+
 
         /* Some test statistics */
         $scope.requestsMade = 0;
@@ -27,6 +32,10 @@ angular.module('loadTest', [])
         $scope.totalResponseTime = 0;
         $scope.transferredMB = 0;
         var transferredBytes = 0;
+
+        if(/autostartLoadTest/.test($location.$$absUrl.split('?').pop())) {
+            $scope.startTest();
+        }
 
         $scope.startTest = function () {
             $scope.stopTest();
