@@ -53,6 +53,9 @@
 			border: 1px solid #ccc;
 			margin: 5px;
 		}
+        #num-errors {
+            width: 5em;
+        }
     </style>
 </head>
 <body ng-controller="LoadTestController">
@@ -79,13 +82,15 @@
 <div class="message" ng-show="message">{{message}}</div>
 <div id="test-results">
     <h2>Load Test Results</h2>
-    <div><i>Requests/second</i><b>{{requestsMade/timeElapsed}}</b></div>
+    <div><i>Requests/second</i><b>{{requestsMade/timeElapsed | number:0}}</b></div>
     <div><i>Avg. response time</i><b>{{(totalResponseTime/requestsMade).toFixed(3)}} ms</b></div>
     <div><i>Total requests (successful/failed)</i><b>{{requestsMade}} (<span class="good">{{requestsSuccess}}</span>/<span class="bad">{{requestsFailure}}</span>)</b></div>
     <div><i>Total MB transferred</i><b>{{transferredMB}}</b></div>
 </div>
-<h3 class="bad" ng-show="testStarted">Failed Requests</h3>
-<div ng-repeat="request in failedRequests.slice().reverse() | limitTo:100">
+<button ng-show="testStarted" ng-click="stopTest();testStarted=false;">Stop Test</button>
+
+<h3 class="bad" ng-show="testRan">Failed Requests (Showing latest <input type="number" min="10" ng-model="numErrors" id="num-errors" /> errors)</h3>
+<div ng-repeat="request in failedRequests.slice().reverse() | limitTo:numErrors">
     <small>URL:</small>
     <h4 class="bad failed-details">{{request.url}}</h4><br/>
     <small>REASON:</small>

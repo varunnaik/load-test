@@ -8,6 +8,8 @@ angular.module('loadTest', [])
         var runningTestTimeout = null;
         $scope.failedRequests = [];
         $scope.message = "";
+        $scope.numErrors = 10;
+        $scope.testRan = false;
 
         /* Test configuration */
         $scope.getFrequency = 1;
@@ -28,6 +30,7 @@ angular.module('loadTest', [])
 
         $scope.startTest = function () {
             $scope.stopTest();
+            $scope.testRan = false;
             $scope.failedRequests = [];
             $scope.requestsMade = 0;
             $scope.requestsSuccess = 0;
@@ -58,10 +61,10 @@ angular.module('loadTest', [])
                 $scope.configHidden = false;
 			}
             
-            runningTestTimeout = setTimeout(function() {
-				$scope.elapsedTime = timeStarted - new Date() / 1000;
-			});
-
+            runningTestTimeout = setInterval(function() {
+				$scope.timeElapsed = parseInt((new Date() - timeStarted) / 1000);
+			},1000);
+            $scope.testRan = true;
         };
 
         $scope.stopTest = function () {
@@ -70,7 +73,7 @@ angular.module('loadTest', [])
                 var test = runningTests.pop();
                 clearTimeout(test.timeout);
             }
-            clearTimeout(runningTestTimeout);
+            clearInterval(runningTestTimeout);
             runningTestTimeout = null;
         };
 
@@ -79,32 +82,44 @@ angular.module('loadTest', [])
             if (typeof (runningTests[testIndex]) === 'undefined') return;
             $scope.requestsMade += 1;
             var startDate = new Date();
-            $http({
-                method: 'GET',
-                url: runningTests[testIndex].url+($scope.randomString)? '?'+Math.random().toString(36):'',
-                timeout: $scope.timeout,
-                cache: false
-            }).then(function success(data) {
-                $scope.requestsSuccess += 1;
-                if (data.headers('Content-Length')) {
-                    transferredBytes += parseInt(data.headers('Content-Length'));
-                    $scope.transferredMB = (transferredBytes/1024/1024).toFixed(2);
-                }
-                $scope.totalResponseTime += new Date() - startDate;
-            }, function error(error, status) {
-                $scope.requestsFailure += 1;
-                $scope.failedRequests.push({
-                    url: runningTests[testIndex].url,
-                    code: error.status,
-                    details: error.statusText
+            var url = runningTests[testIndex].url;
+            if ($scope.randomString) {
+                url += '?' + Math.random().toString(36);
+            }
+            try {
+                $http({
+                    method: 'GET',
+                    url: url,
+                    timeout: $scope.timeout,
+                    cache: false
+                }).then(function success(data) {
+                    $scope.requestsSuccess += 1;
+                    if (data.headers('Content-Length')) {
+                        transferredBytes += parseInt(data.headers('Content-Length'));
+                        $scope.transferredMB = (transferredBytes / 1024 / 1024).toFixed(2);
+                    }
+                    $scope.totalResponseTime += new Date() - startDate;
+                }, function error(error, status) {
+                    $scope.requestsFailure += 1;
+                    $scope.failedRequests.push({
+                        url: url,
+                        code: error.status,
+                        details: error.statusText
+                    });
+                    console.log("Error", runningTests[testIndex].url, error);
+                }).finally(function () {
+                    runningTests[testIndex].timeout = $timeout(
+                        function () {
+                            spawnTest(testIndex);
+                        }, $scope.getFrequency * 1000);
                 });
-                console.log("Error", runningTests[testIndex].url, error);
-            }).finally(function() {
-                runningTests[testIndex].timeout = $timeout(
-                    function() {
-                        spawnTest(testIndex);
-                    }, $scope.getFrequency*1000);
-            });
+            } catch (e) {
+                $scope.failedRequests.push({
+                    url: url,
+                    code: e.name,
+                    details: e.message
+                });
+            }
         };
 
     }]);
