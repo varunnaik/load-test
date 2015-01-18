@@ -17,7 +17,7 @@ angular.module('loadTest', [])
         $scope.timeout = 5000;
         $scope.timeElapsed = 1;
         $scope.randomString = false;
-        $scope.urlsToPing = "/asd\n/lolol\m/asdasdasdasdasd";
+        $scope.urlsToPing = "";
 
         /* Some test statistics */
         $scope.requestsMade = 0;
